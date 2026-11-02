@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>SwordAI Bridge — админ-панель</title>
+<style>
+:root{--bg:#07080c;--panel:rgba(20,22,32,.74);--line:rgba(140,150,255,.16);--text:#e8ebff;--muted:#8a90b2;
+--blue:#3d7bff;--violet:#8a5cff;--ok:#2fd39a;--warn:#ffb547;--bad:#ff5470;--mono:ui-monospace,SFMono-Regular,Menlo,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{min-height:100vh;background:radial-gradient(900px 520px at 0% -10%,rgba(61,123,255,.20),transparent 60%),
+radial-gradient(800px 520px at 110% 0%,rgba(138,92,255,.18),transparent 60%),var(--bg)}
+.wrap{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
+header{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.logo{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,var(--blue),var(--violet));box-shadow:0 0 26px rgba(110,100,255,.55)}
+h1{font-size:19px;margin:0;letter-spacing:.3px}
+.sub{color:var(--muted);font-size:13px}
+.grow{flex:1}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,430px),1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:18px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.card h2{font-size:15px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+.wide{grid-column:1/-1}
+.muted{color:var(--muted)}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;background:var(--muted)}
+.dot.ok{background:var(--ok);box-shadow:0 0 10px var(--ok)}.dot.bad{background:var(--bad)}.dot.warn{background:var(--warn)}
+button{border:0;border-radius:12px;padding:9px 14px;font-size:14px;font-weight:600;cursor:pointer;color:#fff;background:linear-gradient(135deg,var(--blue),var(--violet))}
+button.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+button.danger{background:rgba(255,84,112,.16);border:1px solid rgba(255,84,112,.4);color:#ffb3c0}
+button:disabled{opacity:.5;cursor:default}
+input,select,textarea{width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:rgba(8,10,16,.85);color:var(--text);font-size:14px;outline:none}
+textarea{font-family:var(--mono);min-height:110px;resize:vertical}
+input:focus,select:focus,textarea:focus{border-color:var(--blue)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px}
+.kv div:nth-child(odd){color:var(--muted)}
+code,.mono{font-family:var(--mono);font-size:12.5px;word-break:break-all}
+.code-big{font-family:var(--mono);font-size:30px;letter-spacing:4px;text-align:center;padding:14px;border-radius:14px;
+background:rgba(61,123,255,.08);border:1px dashed rgba(138,92,255,.5);margin:10px 0}
+.item{padding:10px 0;border-top:1px solid var(--line)}.item:first-child{border-top:0}
+.badge{font-size:11.5px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.badge.ok{color:var(--ok);border-color:rgba(47,211,154,.4)}.badge.bad{color:var(--bad);border-color:rgba(255,84,112,.4)}
+.badge.warn{color:var(--warn);border-color:rgba(255,181,71,.4)}
+pre{white-space:pre-wrap;word-break:break-word;font-family:var(--mono);font-size:12.5px;background:rgba(0,0,0,.35);padding:12px;border-radius:12px;max-height:420px;overflow:auto;margin:10px 0 0}
+#login{max-width:420px;margin:12vh auto}
+.hidden{display:none!important}
+.err{color:var(--bad);font-size:13px;margin-top:8px}
+img.shot{max-width:100%;border-radius:12px;margin-top:10px;border:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px 4px;border-top:1px solid var(--line);text-align:left;vertical-align:top}
+th{color:var(--muted);font-weight:500;border-top:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="login" class="card">
+    <header><div class="logo"></div><div><h1>SwordAI Bridge</h1><div class="sub">Вход администратора</div></div></header>
+    <form id="loginForm">
+      <input id="password" type="password" placeholder="Пароль администратора" autocomplete="current-password" required>
+      <div class="row" style="margin-top:12px"><button type="submit" style="flex:1">Войти</button></div>
+      <div id="loginErr" class="err"></div>
+    </form>
+  </div>
+
+  <div id="app" class="hidden">
+    <header>
+      <div class="logo"></div>
+      <div class="grow"><h1>SwordAI Bridge</h1><div class="sub" id="srvLine">…</div></div>
+      <button class="ghost" id="logoutBtn">Выйти</button>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <h2><span class="dot" id="mcpDot"></span>Интеграция ChatGPT</h2>
+        <div class="kv" id="mcpInfo"></div>
+        <div class="row" style="margin-top:10px">
+          <button class="ghost" id="copyMcp">Скопировать адрес MCP</button>
+          <button class="danger" id="revokeAll">Отозвать все токены</button>
+        </div>
+        <div id="clients" style="margin-top:10px"></div>
+      </section>
+
+      <section class="card">
+        <h2>Сопряжение телефона</h2>
+        <p class="muted" style="margin:0 0 10px">Создайте одноразовый код и введите его в приложении SwordAI Bridge вместе с адресом сервера.</p>
+        <div class="row"><input id="pairLabel" placeholder="Подпись (необязательно)" maxlength="80" style="flex:1"><button id="pairBtn">Создать код</button></div>
+        <div id="pairOut" class="hidden">
+          <div class="code-big" id="pairCode"></div>
+          <div class="kv"><div>Адрес сервера</div><div class="mono" id="pairUrl"></div><div>Действует</div><div id="pairTtl"></div></div>
+        </div>
+      </section>
+
+      <section class="card wide">
+        <h2>Устройства</h2>
+        <div id="devices"><span class="muted">Загрузка…</span></div>
+      </section>
+
+      <section class="card">
+        <h2>Тест команды (без ChatGPT)</h2>
+        <div class="row" style="margin-bottom:8px">
+          <select id="tool" style="flex:1"></select>
+          <select id="cmdDevice" style="flex:1"></select>
+        </div>
+        <textarea id="args" spellcheck="false">{}</textarea>
+        <div class="row" style="margin-top:8px"><button id="sendBtn">Отправить</button><span id="sendState" class="muted"></span></div>
+        <pre id="cmdOut" class="hidden"></pre>
+        <img id="cmdImg" class="shot hidden" alt="Скриншот">
+      </section>
+
+      <section class="card">
+        <h2>Последние команды</h2>
+        <div id="commands" class="muted">…</div>
+      </section>
+
+      <section class="card wide">
+        <h2>Журнал операций</h2>
+        <div id="audit"></div>
+        <div class="row" style="margin-top:10px"><button class="ghost" id="moreAudit">Показать ещё</button></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const TOOLS = {
+  get_device_status: {include_apps: false},
+  get_screen_info: {max_elements: 80},
+  capture_screen: {max_dimension: 1080, quality: 70, format: "jpeg"},
+  get_notifications: {limit: 10},
+  search_files: {query: "*.pdf", max_results: 10},
+  open_app: {app_name: "Настройки"},
+  tap_element: {text: "Поиск"},
+  swipe_screen: {direction: "up", distance: 0.5},
+  input_text: {text: "Привет из SwordAI Bridge"},
+  press_back: {},
+  press_home: {},
+  open_file: {file_id: "f_xxxxxxxx"},
+  run_sequence: {steps: [{tool: "press_home"}, {tool: "open_app", args: {app_name: "Настройки"}, wait_ms: 800}, {tool: "get_screen_info", args: {max_elements: 40}}]}
+};
+let token = sessionStorage.getItem("swb_admin") || "";
+let auditBefore = null;
+const $ = (id) => document.getElementById(id);
+
+function el(tag, attrs, ...children) {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") node.className = v;
+    else if (k.startsWith("on")) node.addEventListener(k.slice(2), v);
+    else node.setAttribute(k, v);
+  }
+  for (const c of children) node.append(c instanceof Node ? c : document.createTextNode(c == null ? "" : String(c)));
+  return node;
+}
+function ago(ts) {
+  if (!ts) return "никогда";
+  const s = Math.max(0, Math.round(Date.now() / 1000 - ts));
+  if (s < 60) return s + " с назад";
+  if (s < 3600) return Math.round(s / 60) + " мин назад";
+  if (s < 86400) return Math.round(s / 3600) + " ч назад";
+  return new Date(ts * 1000).toLocaleString("ru-RU");
+}
+async function api(method, path, body) {
+  const res = await fetch(path, {
+    method,
+    headers: Object.assign({"Content-Type": "application/json"}, token ? {Authorization: "Bearer " + token} : {}),
+    body: body === undefined ? undefined : JSON.stringify(body)
+  });
+  let data = null;
+  try { data = await res.json(); } catch (e) { data = null; }
+  if (res.status === 401 && path !== "/api/admin/login") { logout(); throw new Error("Сессия истекла"); }
+  if (!res.ok) throw new Error((data && data.error && (data.error.message || data.error)) || ("HTTP " + res.status));
+  return data;
+}
+function logout() {
+  if (token) fetch("/api/admin/logout", {method: "POST", headers: {Authorization: "Bearer " + token}}).catch(() => {});
+  token = ""; sessionStorage.removeItem("swb_admin");
+  $("app").classList.add("hidden"); $("login").classList.remove("hidden");
+}
+
+$("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault(); $("loginErr").textContent = "";
+  try {
+    const data = await api("POST", "/api/admin/login", {password: $("password").value});
+    token = data.token; sessionStorage.setItem("swb_admin", token); $("password").value = "";
+    start();
+  } catch (err) { $("loginErr").textContent = err.message; }
+});
+$("logoutBtn").onclick = logout;
+
+async function loadOverview() {
+  const o = await api("GET", "/api/admin/overview");
+  const s = o.server, i = o.integration;
+  $("srvLine").textContent = `v${s.version} · ${s.public_url} · БД: ${s.database} · ключ ${s.signing_key_fingerprint}`;
+  const info = $("mcpInfo"); info.replaceChildren();
+  const lastCall = i.last_call ? `${ago(i.last_call.at)} · ${i.last_call.client || ""} ${i.last_call.tool ? "· " + i.last_call.tool : ""}` : "ещё не было";
+  const rows = [["Адрес MCP", s.mcp_url || "выключен (нужен HTTPS)"], ["Подключений", String(i.authorized_clients ?? 0)], ["Последний вызов", lastCall]];
+  for (const [k, v] of rows) info.append(el("div", {}, k), el("div", {class: k === "Адрес MCP" ? "mono" : ""}, v));
+  $("mcpDot").className = "dot " + (!s.mcp_enabled ? "bad" : (i.authorized_clients ? "ok" : "warn"));
+  $("copyMcp").onclick = () => navigator.clipboard.writeText(s.mcp_url || "").then(() => { $("copyMcp").textContent = "Скопировано"; setTimeout(() => $("copyMcp").textContent = "Скопировать адрес MCP", 1500); });
+  renderDevices(o.devices);
+}
+
+function renderDevices(devices) {
+  const box = $("devices"); box.replaceChildren();
+  const sel = $("cmdDevice"); const prev = sel.value; sel.replaceChildren(el("option", {value: ""}, "Устройство по умолчанию"));
+  if (!devices.length) { box.append(el("div", {class: "muted"}, "Нет сопряжённых устройств — создайте код сопряжения.")); return; }
+  for (const d of devices) {
+    sel.append(el("option", {value: d.device_id}, `${d.name} (${d.device_id})`));
+    const st = d.state || {};
+    const badges = el("div", {class: "row", style: "margin-top:6px"},
+      el("span", {class: "badge " + (d.online ? "ok" : "")}, d.online ? "онлайн" : "офлайн"),
+      st.control_enabled === undefined ? "" : el("span", {class: "badge " + (st.control_enabled === false ? "bad" : "ok")}, st.control_enabled === false ? "управление остановлено" : "управление включено"),
+      st.accessibility === undefined ? "" : el("span", {class: "badge " + (st.accessibility ? "ok" : "warn")}, st.accessibility ? "Accessibility ✓" : "Accessibility ✗"),
+      st.projection === undefined ? "" : el("span", {class: "badge " + (st.projection ? "ok" : "")}, st.projection ? "захват экрана активен" : "захват экрана выкл."),
+      st.locked ? el("span", {class: "badge warn"}, "экран заблокирован") : ""
+    );
+    const actions = el("div", {class: "row", style: "margin-top:8px"},
+      el("button", {class: "ghost", onclick: async () => { await api("POST", `/api/admin/devices/${d.device_id}/pause`); refresh(); }}, "Пауза"),
+      el("button", {class: "ghost", onclick: async () => {
+        const name = prompt("Новое имя устройства", d.name); if (!name) return;
+        await api("POST", `/api/admin/devices/${d.device_id}/rename`, {name}); refresh(); }}, "Переименовать"),
+      el("button", {class: "danger", onclick: async () => {
+        if (!confirm(`Отозвать доступ устройства «${d.name}»? Телефон потребуется сопрячь заново.`)) return;
+        await api("POST", `/api/admin/devices/${d.device_id}/revoke`); refresh(); }}, "Отозвать")
+    );
+    box.append(el("div", {class: "item"},
+      el("div", {class: "row"}, el("span", {class: "dot " + (d.online ? "ok" : "")}), el("b", {}, d.name),
+         el("span", {class: "muted"}, `${d.model || ""} · Android ${d.android_version || "?"} · приложение ${d.app_version || "?"}`)),
+      el("div", {class: "muted mono"}, `${d.device_id} · был в сети ${ago(d.last_seen_at)}`), badges, actions));
+  }
+  if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+}
+
+async function loadClients() {
+  const data = await api("GET", "/api/admin/oauth/clients");
+  const box = $("clients"); box.replaceChildren();
+  for (const c of data.clients) {
+    box.append(el("div", {class: "item"},
+      el("div", {class: "row"}, el("b", {}, c.name || "Клиент"), el("span", {class: "badge " + (c.revoked_at ? "bad" : (c.active_grants ? "ok" : ""))},
+        c.revoked_at ? "отозван" : (c.active_grants ? "подключён" : "без токенов")), el("span", {class: "grow"}),
+        c.revoked_at ? "" : el("button", {class: "danger", onclick: async () => { if (!confirm("Отозвать клиента и все его токены?")) return; await api("POST", `/api/admin/oauth/clients/${encodeURIComponent(c.client_id)}/revoke`); refresh(); }}, "Отозвать")),
+      el("div", {class: "muted"}, `создан ${ago(c.created_at)} · использован ${ago(c.last_used_at)}`)));
+  }
+}
+
+async function loadCommands() {
+  const data = await api("GET", "/api/admin/commands?limit=15");
+  const box = $("commands"); box.replaceChildren();
+  if (!data.commands.length) { box.append(el("span", {class: "muted"}, "Команд ещё не было.")); return; }
+  const table = el("table", {}, el("tr", {}, el("th", {}, "Когда"), el("th", {}, "Команда"), el("th", {}, "Источник"), el("th", {}, "Статус")));
+  for (const c of data.commands) {
+    const cls = c.status === "succeeded" ? "ok" : (["failed", "expired", "lost", "timeout"].includes(c.status) ? "bad" : "warn");
+    table.append(el("tr", {}, el("td", {}, ago(c.created_at)), el("td", {class: "mono"}, c.tool),
+      el("td", {}, c.source), el("td", {}, el("span", {class: "badge " + cls}, c.status + (c.error_code ? " · " + c.error_code : "")))));
+  }
+  box.append(table);
+}
+
+async function loadAudit(reset) {
+  if (reset) { auditBefore = null; $("audit").replaceChildren(); }
+  const q = auditBefore ? `&before_id=${auditBefore}` : "";
+  const data = await api("GET", `/api/admin/audit?limit=40${q}`);
+  for (const e of data.events) {
+    auditBefore = e.id;
+    const cls = e.event.startsWith("security.") ? "bad" : (e.event.includes("failed") || e.event.includes("rejected") ? "warn" : "");
+    $("audit").append(el("div", {class: "item"},
+      el("div", {class: "row"}, el("span", {class: "badge " + cls}, e.event), el("span", {class: "muted"}, `${new Date(e.ts * 1000).toLocaleString("ru-RU")} · ${e.actor}`),
+        e.device_id ? el("span", {class: "mono muted"}, e.device_id) : ""),
+      e.details ? el("div", {class: "mono muted"}, JSON.stringify(e.details)) : ""));
+  }
+  $("moreAudit").disabled = data.events.length < 40;
+}
+$("moreAudit").onclick = () => loadAudit(false);
+
+$("pairBtn").onclick = async () => {
+  const data = await api("POST", "/api/admin/pairing-codes", {label: $("pairLabel").value || null});
+  $("pairOut").classList.remove("hidden"); $("pairCode").textContent = data.code; $("pairUrl").textContent = data.server_url;
+  const tick = () => {
+    const left = Math.round(data.expires_at - Date.now() / 1000);
+    $("pairTtl").textContent = left > 0 ? `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}` : "истёк";
+    if (left > 0) setTimeout(tick, 1000);
+  };
+  tick();
+};
+$("revokeAll").onclick = async () => {
+  if (!confirm("Отозвать все OAuth-токены? ChatGPT потребуется переподключить.")) return;
+  await api("POST", "/api/admin/oauth/revoke-all"); refresh();
+};
+
+for (const name of Object.keys(TOOLS)) $("tool").append(el("option", {value: name}, name));
+$("tool").onchange = () => { $("args").value = JSON.stringify(TOOLS[$("tool").value], null, 2); };
+$("tool").onchange();
+$("sendBtn").onclick = async () => {
+  let args;
+  try { args = JSON.parse($("args").value || "{}"); } catch (e) { $("sendState").textContent = "Аргументы — неверный JSON"; return; }
+  $("sendBtn").disabled = true; $("sendState").textContent = "Ожидание телефона…"; $("cmdImg").classList.add("hidden");
+  try {
+    const body = {tool: $("tool").value, args, wait: 40};
+    if ($("cmdDevice").value) body.device_id = $("cmdDevice").value;
+    let out = await api("POST", "/api/admin/commands", body);
+    while (out.status === "pending") {
+      $("sendState").textContent = out.state === "awaiting_confirmation" ? "Подтвердите действие на телефоне…" : "Выполняется…";
+      out = await api("GET", `/api/admin/commands/${out.command_id}?wait=20`);
+    }
+    $("sendState").textContent = out.status === "succeeded" ? "Готово" : "Статус: " + out.status;
+    const shown = Object.assign({}, out);
+    if (out.image && out.image.data) {
+      $("cmdImg").src = `data:${out.image.mime};base64,${out.image.data}`; $("cmdImg").classList.remove("hidden");
+      shown.image = `[${out.image.mime}, ${Math.round(out.image.data.length * 0.75 / 1024)} КБ]`;
+    }
+    $("cmdOut").textContent = JSON.stringify(shown, null, 2); $("cmdOut").classList.remove("hidden");
+  } catch (err) { $("sendState").textContent = err.message; }
+  finally { $("sendBtn").disabled = false; loadCommands().catch(() => {}); }
+};
+
+let timer = null;
+async function refresh() {
+  try { await Promise.all([loadOverview(), loadClients(), loadCommands()]); } catch (e) { /* ошибка уже показана */ }
+}
+function start() {
+  $("login").classList.add("hidden"); $("app").classList.remove("hidden");
+  refresh(); loadAudit(true).catch(() => {});
+  clearInterval(timer); timer = setInterval(() => { if (token && !document.hidden) refresh(); }, 5000);
+}
+if (token) start();
+</script>
+</body>
+</html>

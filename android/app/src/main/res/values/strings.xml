@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SwordAI Bridge</string>
+    <string name="accessibility_service_label">SwordAI Bridge — управление ИИ</string>
+    <string name="accessibility_service_description">Позволяет ассистенту, которого вы подключили (ChatGPT через SwordAI Cloud Bridge), видеть элементы экрана и нажимать, прокручивать и вводить текст по вашим командам. Каждое действие показывается на экране и в журнале; отправка, удаление, оплата и системные настройки требуют вашего подтверждения. Поля паролей не читаются, банковские приложения и менеджеры паролей заблокированы. Аварийная остановка — в уведомлении, на экране и в шторке.</string>
+    <string name="notification_listener_label">SwordAI Bridge — уведомления для ИИ</string>
+    <string name="tile_label">SwordAI: стоп</string>
+    <string name="channel_service">Работа сервиса</string>
+    <string name="channel_service_desc">Постоянное уведомление, пока телефон подключён к Cloud Bridge</string>
+    <string name="channel_confirm">Подтверждение действий</string>
+    <string name="channel_confirm_desc">Запросы на разрешение значимых действий ИИ</string>
+</resources>

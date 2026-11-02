@@ -1,0 +1,12 @@
+{
+  "generated_at": 1793636881,
+  "seed": "interop-test-seed-do-not-use-in-production-0123456789",
+  "public_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA+VATzUxRiGJIROIoI5ybv6BnGKDhyiXbvUVWB9YElpFdPCQmjmp6gJXUTukOYtufdm/7o9WAefvQJPYnyGYtQ==",
+  "fingerprint": "BBD1 DF63 0854 F382 E135 1A40 51F0 23B9",
+  "device_id": "dev_InteropDevice01",
+  "envelope": {
+    "type": "command",
+    "payload": "{\"args\":{\"exact\":false,\"index\":0,\"long_press\":false,\"text\":\"Отправить «сообщение» ✓\"},\"command_id\":\"cmd_InteropTest0001\",\"device_id\":\"dev_InteropDevice01\",\"expires_at\":1767225720.123,\"issued_at\":1767225600.123,\"origin\":{\"client\":\"ChatGPT\",\"source\":\"mcp\"},\"seq\":7,\"tool\":\"tap_element\",\"v\":1}",
+    "sig": "MEUCIQDC/3ZQqqRg2wD9RUwhcRhaEEHa35gLF8nk88GeMqYXrAIgagI1aI2607QBoPT54fv3SWFT09XioMAKHJl89lGcgRs="
+  }
+}

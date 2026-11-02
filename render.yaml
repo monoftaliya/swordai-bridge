@@ -1,0 +1,20 @@
+# Render Blueprint: New → Blueprint → выберите этот репозиторий.
+# Бесплатный тариф: сервис засыпает после 15 минут без входящего трафика, но пинги
+# подключённого телефона (сообщения WebSocket) держат его активным. Диск временный —
+# для постоянного хранения укажите DATABASE_URL (например, бесплатный Neon Postgres).
+services:
+  - type: web
+    name: swordai-bridge
+    runtime: docker
+    plan: free
+    dockerfilePath: ./server/Dockerfile
+    dockerContext: ./server
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: SIGNING_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
